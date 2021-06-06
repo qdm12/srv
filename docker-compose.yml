@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  go-template-docker:
+    build: .
+    image: qmcgaw/go-template-docker
+    container_name: go-template-docker
+    ports:
+      - 8000:8000/tcp
+    environment:
+      - HTTP_SERVER_ADDRESS=:8000
+      - HTTP_SERVER_ROOT_URL=/
+      - HTTP_SERVER_LOG_REQUESTS=on
+      - HTTP_SERVER_ALLOWED_ORIGINS=
+      - HTTP_SERVER_ALLOWED_HEADERS=
+      - METRICS_SERVER_ADDRESS=:9090
+      - LOG_LEVEL=info
+      - STORE_TYPE=memory
+      - STORE_JSON_FILEPATH=data.json
+      - STORE_POSTGRES_ADDRESS=psql:5432
+      - STORE_POSTGRES_USER=postgres
+      - STORE_POSTGRES_PASSWORD=postgres
+      - STORE_POSTGRES_DATABASE=database
+      - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
+      - TZ=America/Montreal
+    secrets:
+      - postgres_user
+      - postgres_password
+    restart: always
+
+  postgres:
+    image: postgres:13-alpine
+    volumes:
+      - go-template-docker:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: go-template-docker
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_user
+      - postgres_password
+
+secrets:
+  postgres_user:
+    file: ./postgres_user
+  postgres_password:
+    file: ./postgres_password

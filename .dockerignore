@@ -1,0 +1,10 @@
+.devcontainer
+.github
+.vscode
+.dockerignore
+.gitignore
+docker-compose.yml
+Dockerfile
+LICENSE
+README.md
+title.svg
