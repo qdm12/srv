@@ -21,6 +21,9 @@ func newRouter(config config.HTTP, logger logging.Logger,
 	metricsMiddleware := metricsmware.New(metrics)
 	router.Use(metricsMiddleware, logMiddleware)
 
+	if config.RootURL != "" {
+		router.Handle(config.RootURL, http.RedirectHandler(config.RootURL+"/", http.StatusMovedPermanently))
+	}
 	router.Mount(config.RootURL+"/", fsroute.NewHandler(config.RootURL, srvFS))
 
 	return router
