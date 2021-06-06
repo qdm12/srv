@@ -21,7 +21,7 @@ func newRouter(config config.HTTP, logger logging.Logger,
 	metricsMiddleware := metricsmware.New(metrics)
 	router.Use(metricsMiddleware, logMiddleware)
 
-	router.Mount("/", fsroute.NewHandler(srvFS))
+	router.Mount(config.RootURL+"/", fsroute.NewHandler(config.RootURL, srvFS))
 
 	return router
 }
