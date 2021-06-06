@@ -20,7 +20,15 @@ func NewHandler(uriPrefix string, fs http.FileSystem) http.Handler {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r.URL.Path = strings.TrimPrefix(r.URL.Path, h.uriPrefix) // cut down the prefix for the file server
+	hasPrefix := strings.HasPrefix(r.URL.Path, h.uriPrefix)
+	if hasPrefix {
+		// cut down the prefix for the file server
+		r.URL.Path = r.URL.Path[len(h.uriPrefix):]
+	}
+
 	h.fileServer.ServeHTTP(w, r)
-	r.URL.Path = h.uriPrefix + r.URL.Path // restore the full path
+
+	if hasPrefix {
+		r.URL.Path = h.uriPrefix + r.URL.Path // restore the full path
+	}
 }
