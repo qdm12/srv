@@ -1,5 +1,5 @@
 {
-    "name": "go-template-dev",
+    "name": "srv-dev",
     "dockerComposeFile": [
         "docker-compose.yml"
     ],

@@ -6,9 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyokomi/emoji"
-	"github.com/qdm12/go-template/internal/constants"
-	"github.com/qdm12/go-template/internal/models"
+	"github.com/qdm12/srv/internal/constants"
+	"github.com/qdm12/srv/internal/models"
 )
 
 // Splash returns the welcome spash message.
@@ -28,9 +27,9 @@ func title() []string {
 	return []string{
 		"=========================================",
 		"=========================================",
-		"============== go-template ==============",
+		"================== srv ==================",
 		"=========================================",
-		"=== Made with " + emoji.Sprint(":heart:") + " by github.com/qdm12 ====",
+		"=== Made with ❤️ by github.com/qdm12 ====",
 		"=========================================",
 	}
 }
@@ -43,14 +42,14 @@ func announcement() []string {
 	if time.Now().After(expirationDate) {
 		return nil
 	}
-	return []string{emoji.Sprint(":mega: ") + constants.Annoucement}
+	return []string{"📣" + constants.Annoucement}
 }
 
 func links() []string {
 	return []string{
-		emoji.Sprint(":wrench: ") + "Need help? " + constants.IssueLink,
-		emoji.Sprint(":computer: ") + "Email? quentin.mcgaw@gmail.com",
-		emoji.Sprint(":coffee: ") + "Slack? Join from the Slack button on Github",
-		emoji.Sprint(":money_with_wings: ") + "Help me? https://github.com/sponsors/qdm12",
+		"🔧 Need help? " + constants.IssueLink,
+		"💻 Email? quentin.mcgaw@gmail.com",
+		"☕ Slack? Join from the Slack button on Github",
+		"💰 Help me? https://github.com/sponsors/qdm12",
 	}
 }

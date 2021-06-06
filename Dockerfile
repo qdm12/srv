@@ -48,32 +48,20 @@ RUN GOARCH="$(xcputranslate -targetplatform=${TARGETPLATFORM} -field arch)" \
     -X 'main.commit=$COMMIT' \
     " -o app cmd/app/main.go
 
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
-RUN apk --update add ca-certificates tzdata
-
 FROM scratch
 USER 1000
-COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 ENTRYPOINT ["/app"]
 EXPOSE 8000/tcp
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/app","healthcheck"]
 ENV HTTP_SERVER_ADDRESS=:8000 \
     HTTP_SERVER_ROOT_URL=/ \
     HTTP_SERVER_LOG_REQUESTS=on \
-    HTTP_SERVER_ALLOWED_ORIGINS= \
-    HTTP_SERVER_ALLOWED_HEADERS= \
+    HTTP_SERVER_SRV_FILEPATH=./srv \
     METRICS_SERVER_ADDRESS=:9090 \
     LOG_LEVEL=info \
-    STORE_TYPE=memory \
-    STORE_JSON_FILEPATH=data.json \
-    STORE_POSTGRES_ADDRESS=psql:5432 \
-    STORE_POSTGRES_USER=postgres \
-    STORE_POSTGRES_PASSWORD=postgres \
-    STORE_POSTGRES_DATABASE=database \
     HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \
     TZ=America/Montreal
-COPY --chown=1000 postgres/schema.sql /schema.sql
+COPY --chown=1000 srv /srv
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
@@ -82,9 +70,9 @@ LABEL \
     org.opencontainers.image.version=$VERSION \
     org.opencontainers.image.created=$BUILD_DATE \
     org.opencontainers.image.revision=$COMMIT \
-    org.opencontainers.image.url="https://github.com/qdm12/go-template" \
-    org.opencontainers.image.documentation="https://github.com/qdm12/go-template/blob/main/README.md" \
-    org.opencontainers.image.source="https://github.com/qdm12/go-template" \
-    org.opencontainers.image.title="go-template" \
-    org.opencontainers.image.description="SHORT_DESCRIPTION"
+    org.opencontainers.image.url="https://github.com/qdm12/srv" \
+    org.opencontainers.image.documentation="https://github.com/qdm12/srv/blob/main/README.md" \
+    org.opencontainers.image.source="https://github.com/qdm12/srv" \
+    org.opencontainers.image.title="srv" \
+    org.opencontainers.image.description="srv is a small Go application to server static files over HTTP"
 COPY --from=build --chown=1000 /tmp/gobuild/app /app

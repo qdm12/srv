@@ -2,24 +2,25 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"io/fs"
+	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
-	_ "github.com/lib/pq"
-	"github.com/qdm12/go-template/internal/config"
-	"github.com/qdm12/go-template/internal/data"
-	"github.com/qdm12/go-template/internal/health"
-	"github.com/qdm12/go-template/internal/metrics"
-	"github.com/qdm12/go-template/internal/models"
-	"github.com/qdm12/go-template/internal/processor"
-	"github.com/qdm12/go-template/internal/server"
-	"github.com/qdm12/go-template/internal/splash"
 	"github.com/qdm12/golibs/logging"
+	"github.com/qdm12/srv/internal/config"
+	"github.com/qdm12/srv/internal/health"
+	"github.com/qdm12/srv/internal/metrics"
+	"github.com/qdm12/srv/internal/models"
+	"github.com/qdm12/srv/internal/server"
+	"github.com/qdm12/srv/internal/splash"
 )
 
 var (
@@ -100,15 +101,8 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 
 	logger = logger.NewChild(logging.Settings{Level: config.Log.Level})
 
-	db, err := setupDatabase(config.Store, logger)
-	if err != nil {
-		return err
-	}
-
 	wg := &sync.WaitGroup{}
 	crashed := make(chan error)
-
-	proc := processor.NewProcessor(db)
 
 	metricsLogger := logger.NewChild(logging.Settings{Prefix: "metrics server: "})
 	metricsServer := metrics.NewServer(config.Metrics.Address, metricsLogger)
@@ -121,7 +115,9 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	go metricsServer.Run(ctx, wg, crashed)
 
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
-	server := server.New(config.HTTP, proc, serverLogger, metrics, buildInfo)
+	walkDirectory(config.HTTP.SrvFilepath, logger)
+	srvFS := http.Dir(config.HTTP.SrvFilepath)
+	server := server.New(config.HTTP, serverLogger, metrics, srvFS)
 	wg.Add(1)
 	go server.Run(ctx, wg, crashed)
 
@@ -133,27 +129,26 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 
 	select {
 	case <-ctx.Done():
-		wg.Wait()
-		return db.Close()
-	case err := <-crashed:
+	case err = <-crashed:
 		cancel()
-		wg.Wait()
-		_ = db.Close()
-		return err
 	}
+
+	wg.Wait()
+	return err
 }
 
-var errDatabaseTypeUnknown = errors.New("database type is unknown")
-
-func setupDatabase(c config.Store, logger logging.Logger) (db data.Database, err error) {
-	switch c.Type {
-	case config.MemoryStoreType:
-		return data.NewMemory()
-	case config.JSONStoreType:
-		return data.NewJSON(c.JSON.Filepath)
-	case config.PostgresStoreType:
-		return data.NewPostgres(c.Postgres, logger)
-	default:
-		return nil, fmt.Errorf("%w: %s", errDatabaseTypeUnknown, c.Type)
-	}
+func walkDirectory(path string, logger logging.Logger) {
+	var filesFound, directoriesFound []string
+	_ = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			logger.Debug("Found directory: " + path)
+			directoriesFound = append(directoriesFound, path)
+		} else {
+			logger.Debug("Found file: " + path)
+			filesFound = append(filesFound, path)
+		}
+		return nil
+	})
+	logger.Info("Found " + strconv.Itoa(len(directoriesFound)) + " directories and " +
+		strconv.Itoa(len(filesFound)) + " files in " + path)
 }

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/qdm12/go-template/internal/metrics"
+	"github.com/qdm12/srv/internal/metrics"
 )
 
 func New(metrics metrics.Metrics) func(http.Handler) http.Handler {

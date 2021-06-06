@@ -13,7 +13,6 @@ type Config struct {
 	HTTP    HTTP
 	Metrics Metrics
 	Log     Log
-	Store   Store
 	Health  Health
 }
 
@@ -21,7 +20,6 @@ var (
 	ErrLogConfig    = errors.New("cannot obtain log config")
 	ErrHTTPConfig   = errors.New("cannot obtain HTTP server config")
 	ErrHealthConfig = errors.New("cannot obtain health config")
-	ErrStoreConfig  = errors.New("cannot obtain store config")
 )
 
 func (c *Config) get(env params.Env) (warnings []string, err error) {
@@ -44,14 +42,6 @@ func (c *Config) get(env params.Env) (warnings []string, err error) {
 	err = c.Log.get(env)
 	if err != nil {
 		return warnings, fmt.Errorf("%w: %s", ErrLogConfig, err)
-	}
-
-	warning, err = c.Store.get(env)
-	if len(warning) > 0 {
-		warnings = append(warnings, warning)
-	}
-	if err != nil {
-		return warnings, fmt.Errorf("%w: %s", ErrStoreConfig, err)
 	}
 
 	warning, err = c.Health.get(env)

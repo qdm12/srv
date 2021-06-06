@@ -5,11 +5,10 @@ import (
 )
 
 type HTTP struct {
-	Address        string
-	RootURL        string
-	LogRequests    bool
-	AllowedOrigins []string
-	AllowedHeaders []string
+	Address     string
+	RootURL     string
+	SrvFilepath string
+	LogRequests bool
 }
 
 func (h *HTTP) get(env params.Env) (warning string, err error) {
@@ -21,15 +20,11 @@ func (h *HTTP) get(env params.Env) (warning string, err error) {
 	if err != nil {
 		return warning, err
 	}
+	h.SrvFilepath, err = h.getSrvFilepath(env)
+	if err != nil {
+		return warning, err
+	}
 	h.LogRequests, err = h.getLogRequests(env)
-	if err != nil {
-		return warning, err
-	}
-	h.AllowedOrigins, err = h.getAllowedOrigins(env)
-	if err != nil {
-		return warning, err
-	}
-	h.AllowedHeaders, err = h.getAllowedHeaders(env)
 	if err != nil {
 		return warning, err
 	}
@@ -48,16 +43,10 @@ func (h *HTTP) getRootURL(env params.Env) (rootURL string, err error) {
 	return env.RootURL("HTTP_SERVER_ROOT_URL")
 }
 
+func (h *HTTP) getSrvFilepath(env params.Env) (filepath string, err error) {
+	return env.Path("HTTP_SERVER_SRV_FILEPATH", params.Default("./srv"))
+}
+
 func (h *HTTP) getLogRequests(env params.Env) (log bool, err error) {
 	return env.OnOff("HTTP_SERVER_LOG_REQUESTS", params.Default("on"))
-}
-
-func (h *HTTP) getAllowedOrigins(env params.Env) (
-	allowedOrigins []string, err error) {
-	return env.CSV("HTTP_SERVER_ALLOWED_ORIGINS")
-}
-
-func (h *HTTP) getAllowedHeaders(env params.Env) (
-	allowedOrigins []string, err error) {
-	return env.CSV("HTTP_SERVER_ALLOWED_HEADERS")
 }

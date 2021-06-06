@@ -8,11 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/qdm12/go-template/internal/config"
-	"github.com/qdm12/go-template/internal/metrics"
-	"github.com/qdm12/go-template/internal/models"
-	"github.com/qdm12/go-template/internal/processor"
 	"github.com/qdm12/golibs/logging"
+	"github.com/qdm12/srv/internal/config"
+	"github.com/qdm12/srv/internal/metrics"
 )
 
 type Server interface {
@@ -25,10 +23,10 @@ type server struct {
 	handler http.Handler
 }
 
-func New(c config.HTTP, proc processor.Processor,
-	logger logging.Logger, metrics metrics.Metrics,
-	buildInfo models.BuildInformation) Server {
-	handler := newRouter(c, logger, metrics, buildInfo, proc)
+var ErrAccessSrvDirectory = errors.New("cannot access srv directory in embedded filesystem")
+
+func New(c config.HTTP, logger logging.Logger, metrics metrics.Metrics, fs http.FileSystem) Server {
+	handler := newRouter(c, logger, metrics, fs)
 	return &server{
 		address: c.Address,
 		logger:  logger,

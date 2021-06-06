@@ -2,15 +2,14 @@ package server
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/qdm12/go-template/internal/config"
-	"github.com/qdm12/go-template/internal/metrics/mock_metrics"
-	"github.com/qdm12/go-template/internal/models"
-	"github.com/qdm12/go-template/internal/processor/mock_processor"
 	"github.com/qdm12/golibs/logging/mock_logging"
+	"github.com/qdm12/srv/internal/config"
+	"github.com/qdm12/srv/internal/metrics/mock_metrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,10 +23,9 @@ func Test_New(t *testing.T) {
 	}
 	logger := mock_logging.NewMockLogger(ctrl)
 	metrics := mock_metrics.NewMockMetrics(ctrl)
-	buildInformation := models.BuildInformation{}
-	proc := mock_processor.NewMockProcessor(ctrl)
+	fs := http.Dir("path")
 
-	serverInterface := New(config, proc, logger, metrics, buildInformation)
+	serverInterface := New(config, logger, metrics, fs)
 	serverImpl, ok := serverInterface.(*server)
 	require.True(t, ok)
 	assert.Equal(t, config.Address, serverImpl.address)
