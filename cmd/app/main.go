@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -9,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -20,6 +20,7 @@ import (
 	"github.com/qdm12/srv/internal/metrics"
 	"github.com/qdm12/srv/internal/models"
 	"github.com/qdm12/srv/internal/server"
+	"github.com/qdm12/srv/internal/shutdown"
 	"github.com/qdm12/srv/internal/splash"
 )
 
@@ -99,10 +100,9 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		return err
 	}
 
-	logger = logger.NewChild(logging.Settings{Level: config.Log.Level})
+	shutdownServersGroup := shutdown.NewGroup("servers: ")
 
-	wg := &sync.WaitGroup{}
-	crashed := make(chan error)
+	logger = logger.NewChild(logging.Settings{Level: config.Log.Level})
 
 	metricsLogger := logger.NewChild(logging.Settings{Prefix: "metrics server: "})
 	metricsServer := metrics.NewServer(config.Metrics.Address, metricsLogger)
@@ -111,30 +111,45 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	if err != nil {
 		return err
 	}
-	wg.Add(1)
-	go metricsServer.Run(ctx, wg, crashed)
+	metricsServerCtx, metricsServerDone := shutdownServersGroup.Add("metrics", time.Second)
+	go func() {
+		defer close(metricsServerDone)
+		if err := metricsServer.Run(metricsServerCtx); err != nil {
+			logger.Error(err.Error())
+		}
+	}()
 
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
 	walkDirectory(config.HTTP.SrvFilepath, logger)
 	srvFS := http.Dir(config.HTTP.SrvFilepath)
-	server := server.New(config.HTTP, serverLogger, metrics, srvFS)
-	wg.Add(1)
-	go server.Run(ctx, wg, crashed)
+	mainServer := server.New(config.HTTP, serverLogger, metrics, srvFS)
+	serverCtx, serverDone := shutdownServersGroup.Add("server", time.Second)
+	go func() {
+		defer close(serverDone)
+		if err := mainServer.Run(serverCtx); err != nil {
+			logger.Error(err.Error())
+			if errors.Is(err, server.ErrCrashed) {
+				cancel() // stop other routines
+			}
+		}
+	}()
 
 	healthcheck := func() error { return nil }
 	heathcheckLogger := logger.NewChild(logging.Settings{Prefix: "healthcheck: "})
 	healthServer := health.NewServer(config.Health.Address, heathcheckLogger, healthcheck)
-	wg.Add(1)
-	go healthServer.Run(ctx, wg)
+	healthServerCtx, healthServerDone := shutdownServersGroup.Add("health", time.Second)
+	go func() {
+		defer close(healthServerDone)
+		if err := healthServer.Run(healthServerCtx); err != nil {
+			logger.Error(err.Error())
+		}
+	}()
 
-	select {
-	case <-ctx.Done():
-	case err = <-crashed:
-		cancel()
-	}
+	shutdownOrder := shutdown.NewOrder()
+	shutdownOrder.Append(shutdownServersGroup)
 
-	wg.Wait()
-	return err
+	<-ctx.Done()
+	return shutdownOrder.Shutdown(time.Second, logger)
 }
 
 func walkDirectory(path string, logger logging.Logger) {

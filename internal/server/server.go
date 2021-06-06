@@ -4,8 +4,8 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/qdm12/golibs/logging"
@@ -14,7 +14,7 @@ import (
 )
 
 type Server interface {
-	Run(ctx context.Context, wg *sync.WaitGroup, crashed chan<- error)
+	Run(ctx context.Context) error
 }
 
 type server struct {
@@ -34,24 +34,31 @@ func New(c config.HTTP, logger logging.Logger, metrics metrics.Metrics, fs http.
 	}
 }
 
-func (s *server) Run(ctx context.Context, wg *sync.WaitGroup, crashed chan<- error) {
-	defer wg.Done()
+var (
+	ErrCrashed  = errors.New("server crashed")
+	ErrShutdown = errors.New("server could not be shutdown")
+)
+
+func (s *server) Run(ctx context.Context) error {
 	server := http.Server{Addr: s.address, Handler: s.handler}
+	shutdownErrCh := make(chan error)
 	go func() {
 		<-ctx.Done()
-		s.logger.Warn("context canceled: shutting down")
-		defer s.logger.Warn("shut down")
 		const shutdownGraceDuration = 2 * time.Second
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownGraceDuration)
 		defer cancel()
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			s.logger.Error("failed shutting down: %s", err)
-		}
+		shutdownErrCh <- server.Shutdown(shutdownCtx)
 	}()
 
-	s.logger.Info("listening on %s", s.address)
+	s.logger.Info("listening on " + s.address)
 	err := server.ListenAndServe()
 	if err != nil && !errors.Is(ctx.Err(), context.Canceled) { // server crashed
-		crashed <- err
+		return fmt.Errorf("%w: %s", ErrCrashed, err)
 	}
+
+	if err := <-shutdownErrCh; err != nil {
+		return fmt.Errorf("%w: %s", ErrShutdown, err)
+	}
+
+	return nil
 }
