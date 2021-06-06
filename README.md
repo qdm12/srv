@@ -1,6 +1,6 @@
 # SRV
 
-*srv is a small Go application to use in other projects as a base Docker image  serve static files over HTTP*
+*srv is a small Go application to use as a container or as a base Docker image in other projects to serve static files over HTTP*
 
 <img height="200" src="https://raw.githubusercontent.com/qdm12/srv/main/title.svg?sanitize=true">
 

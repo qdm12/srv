@@ -74,5 +74,5 @@ LABEL \
     org.opencontainers.image.documentation="https://github.com/qdm12/srv/blob/main/README.md" \
     org.opencontainers.image.source="https://github.com/qdm12/srv" \
     org.opencontainers.image.title="srv" \
-    org.opencontainers.image.description="srv is a small Go application to server static files over HTTP"
+    org.opencontainers.image.description="srv is a small Go application to use as a container or as a base Docker image in other projects to serve static files over HTTP"
 COPY --from=build --chown=1000 /tmp/gobuild/app /app
