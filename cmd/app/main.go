@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -16,6 +14,7 @@ import (
 
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/srv/internal/config"
+	"github.com/qdm12/srv/internal/filesystem"
 	"github.com/qdm12/srv/internal/health"
 	"github.com/qdm12/srv/internal/metrics"
 	"github.com/qdm12/srv/internal/models"
@@ -106,6 +105,16 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		return err
 	}
 
+	files, directories, err := filesystem.WalkSrv(config.HTTP.SrvFilepath)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		logger.Debug("Found file: " + file)
+	}
+	logger.Info("Found " + strconv.Itoa(len(files)) + " files and " +
+		strconv.Itoa(len(directories)) + " directories in " + config.HTTP.SrvFilepath)
+
 	shutdownServersGroup := shutdown.NewGroup("servers: ")
 
 	logger = logger.NewChild(logging.Settings{Level: config.Log.Level})
@@ -126,7 +135,6 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	}()
 
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
-	walkDirectory(config.HTTP.SrvFilepath, logger)
 	srvFS := http.Dir(config.HTTP.SrvFilepath)
 	mainServer := server.New(config.HTTP, serverLogger, metrics, srvFS)
 	serverCtx, serverDone := shutdownServersGroup.Add("server", time.Second)
@@ -156,20 +164,4 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 
 	<-ctx.Done()
 	return shutdownOrder.Shutdown(time.Second, logger)
-}
-
-func walkDirectory(path string, logger logging.Logger) {
-	var filesFound, directoriesFound []string
-	_ = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			logger.Debug("Found directory: " + path)
-			directoriesFound = append(directoriesFound, path)
-		} else {
-			logger.Debug("Found file: " + path)
-			filesFound = append(filesFound, path)
-		}
-		return nil
-	})
-	logger.Info("Found " + strconv.Itoa(len(directoriesFound)) + " directories and " +
-		strconv.Itoa(len(filesFound)) + " files in " + path)
 }
