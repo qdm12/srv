@@ -105,6 +105,17 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		return err
 	}
 
+	srvExists, srvIsEmpty, err := filesystem.DirChecks(config.HTTP.SrvFilepath)
+	if err != nil {
+		return err
+	}
+	if !srvExists || srvIsEmpty {
+		logger.Warn(config.HTTP.SrvFilepath + " is empty, initiating it with dummy files")
+		if err := filesystem.InitDummySrv(config.HTTP.SrvFilepath); err != nil {
+			return err
+		}
+	}
+
 	files, directories, err := filesystem.WalkSrv(config.HTTP.SrvFilepath)
 	if err != nil {
 		return err

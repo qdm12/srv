@@ -48,6 +48,8 @@ RUN GOARCH="$(xcputranslate -targetplatform=${TARGETPLATFORM} -field arch)" \
     -X 'main.commit=$COMMIT' \
     " -o app cmd/app/main.go
 
+FROM alpine:${ALPINE_VERSION} AS alpine
+
 FROM scratch
 USER 1000
 ENTRYPOINT ["/app"]
@@ -61,7 +63,7 @@ ENV HTTP_SERVER_ADDRESS=:8000 \
     LOG_LEVEL=info \
     HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \
     TZ=America/Montreal
-COPY --chown=1000 srv /srv
+COPY --from=alpine --chown=1000 /srv /srv
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
