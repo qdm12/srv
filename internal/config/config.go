@@ -17,9 +17,10 @@ type Config struct {
 }
 
 var (
-	ErrLogConfig    = errors.New("cannot obtain log config")
-	ErrHTTPConfig   = errors.New("cannot obtain HTTP server config")
-	ErrHealthConfig = errors.New("cannot obtain health config")
+	ErrLogConfig     = errors.New("cannot obtain log config")
+	ErrHTTPConfig    = errors.New("cannot obtain HTTP server config")
+	ErrMetricsConfig = errors.New("cannot obtain metrics config")
+	ErrHealthConfig  = errors.New("cannot obtain health config")
 )
 
 func (c *Config) get(env params.Env) (warnings []string, err error) {
@@ -36,7 +37,7 @@ func (c *Config) get(env params.Env) (warnings []string, err error) {
 		warnings = append(warnings, warning)
 	}
 	if err != nil {
-		return warnings, fmt.Errorf("%w: %s", ErrHTTPConfig, err)
+		return warnings, fmt.Errorf("%w: %s", ErrMetricsConfig, err)
 	}
 
 	err = c.Log.get(env)
