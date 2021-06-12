@@ -48,7 +48,7 @@ RUN GOARCH="$(xcputranslate -targetplatform=${TARGETPLATFORM} -field arch)" \
     -X 'main.commit=$COMMIT' \
     " -o app cmd/app/main.go
 
-FROM alpine:${ALPINE_VERSION} AS alpine
+FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
 
 FROM scratch
 USER 1000
