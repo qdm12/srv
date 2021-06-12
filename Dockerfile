@@ -59,11 +59,13 @@ ENV HTTP_SERVER_ADDRESS=:8000 \
     HTTP_SERVER_ROOT_URL=/ \
     HTTP_SERVER_LOG_REQUESTS=on \
     FILEPATH_SRV=./srv \
+    FILEPATH_WORK=/tmp/srv \
     METRICS_SERVER_ADDRESS=:9090 \
     LOG_LEVEL=info \
     HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \
     TZ=America/Montreal
 COPY --from=alpine --chown=1000 /srv /srv
+COPY --from=alpine --chown=1000 /srv /tmp/srv
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
@@ -77,4 +79,5 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/srv" \
     org.opencontainers.image.title="srv" \
     org.opencontainers.image.description="srv is a small Go application to use as a container or as a base Docker image in other projects to serve static files over HTTP"
+VOLUME [ "/tmp/srv" ]
 COPY --from=build --chown=1000 /tmp/gobuild/app /app

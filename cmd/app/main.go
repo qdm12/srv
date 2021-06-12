@@ -52,6 +52,7 @@ func main() {
 
 	select {
 	case <-ctx.Done():
+		fmt.Println()
 		logger.Warn("Caught OS signal, shutting down\n")
 		stop()
 	case err := <-errorCh:
@@ -127,6 +128,11 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	logger.Info("Found " + strconv.Itoa(len(files)) + " files and " +
 		strconv.Itoa(len(directories)) + " directories in " + config.Filepaths.Srv)
 
+	err = filesystem.CopyDir(config.Filepaths.Srv, config.Filepaths.Work)
+	if err != nil {
+		return err
+	}
+
 	shutdownServersGroup := shutdown.NewGroup("servers: ")
 
 	metricsLogger := logger.NewChild(logging.Settings{Prefix: "metrics server: "})
@@ -145,7 +151,7 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	}()
 
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
-	srvFS := http.Dir(config.Filepaths.Srv)
+	srvFS := http.Dir(config.Filepaths.Work)
 	mainServer := server.New(config.HTTP, serverLogger, metrics, srvFS)
 	serverCtx, serverDone := shutdownServersGroup.Add("server", time.Second)
 	go func() {

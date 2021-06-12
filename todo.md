@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] Use fsnotify to detect changes to srv directory
+
 ## Config
 
 - [ ] Config structs `String()` and `Lines()` methods
