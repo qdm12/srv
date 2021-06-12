@@ -98,6 +98,7 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	fmt.Println(splash.Splash(buildInfo))
 
 	config, warnings, err := configReader.ReadConfig()
+	logger = logger.NewChild(logging.Settings{Level: config.Log.Level})
 	for _, warning := range warnings {
 		logger.Warn(warning)
 	}
@@ -127,8 +128,6 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		strconv.Itoa(len(directories)) + " directories in " + config.Filepaths.Srv)
 
 	shutdownServersGroup := shutdown.NewGroup("servers: ")
-
-	logger = logger.NewChild(logging.Settings{Level: config.Log.Level})
 
 	metricsLogger := logger.NewChild(logging.Settings{Prefix: "metrics server: "})
 	metricsServer := metrics.NewServer(config.Metrics.Address, metricsLogger)
