@@ -10,17 +10,19 @@ import (
 )
 
 type Config struct {
-	HTTP    HTTP
-	Metrics Metrics
-	Log     Log
-	Health  Health
+	HTTP      HTTP
+	Filepaths Filepaths
+	Metrics   Metrics
+	Log       Log
+	Health    Health
 }
 
 var (
-	ErrLogConfig     = errors.New("cannot obtain log config")
-	ErrHTTPConfig    = errors.New("cannot obtain HTTP server config")
-	ErrMetricsConfig = errors.New("cannot obtain metrics config")
-	ErrHealthConfig  = errors.New("cannot obtain health config")
+	ErrHTTPConfig     = errors.New("cannot obtain HTTP server config")
+	ErrFilepathConfig = errors.New("cannot obtain file paths config")
+	ErrMetricsConfig  = errors.New("cannot obtain metrics config")
+	ErrLogConfig      = errors.New("cannot obtain log config")
+	ErrHealthConfig   = errors.New("cannot obtain health config")
 )
 
 func (c *Config) get(env params.Env) (warnings []string, err error) {
@@ -30,6 +32,11 @@ func (c *Config) get(env params.Env) (warnings []string, err error) {
 	}
 	if err != nil {
 		return warnings, fmt.Errorf("%w: %s", ErrHTTPConfig, err)
+	}
+
+	err = c.Filepaths.get(env)
+	if err != nil {
+		return warnings, fmt.Errorf("%w: %s", ErrLogConfig, err)
 	}
 
 	warning, err = c.Metrics.get(env)

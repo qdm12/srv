@@ -105,18 +105,18 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		return err
 	}
 
-	srvExists, srvIsEmpty, err := filesystem.DirChecks(config.HTTP.SrvFilepath)
+	srvExists, srvIsEmpty, err := filesystem.DirChecks(config.Filepaths.Srv)
 	if err != nil {
 		return err
 	}
 	if !srvExists || srvIsEmpty {
-		logger.Warn(config.HTTP.SrvFilepath + " is empty, initiating it with dummy files")
-		if err := filesystem.InitDummySrv(config.HTTP.SrvFilepath); err != nil {
+		logger.Warn(config.Filepaths.Srv + " is empty, initiating it with dummy files")
+		if err := filesystem.InitDummySrv(config.Filepaths.Srv); err != nil {
 			return err
 		}
 	}
 
-	files, directories, err := filesystem.WalkSrv(config.HTTP.SrvFilepath)
+	files, directories, err := filesystem.WalkSrv(config.Filepaths.Srv)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 		logger.Debug("Found file: " + file)
 	}
 	logger.Info("Found " + strconv.Itoa(len(files)) + " files and " +
-		strconv.Itoa(len(directories)) + " directories in " + config.HTTP.SrvFilepath)
+		strconv.Itoa(len(directories)) + " directories in " + config.Filepaths.Srv)
 
 	shutdownServersGroup := shutdown.NewGroup("servers: ")
 
@@ -146,7 +146,7 @@ func _main(ctx context.Context, buildInfo models.BuildInformation,
 	}()
 
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
-	srvFS := http.Dir(config.HTTP.SrvFilepath)
+	srvFS := http.Dir(config.Filepaths.Srv)
 	mainServer := server.New(config.HTTP, serverLogger, metrics, srvFS)
 	serverCtx, serverDone := shutdownServersGroup.Add("server", time.Second)
 	go func() {

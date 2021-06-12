@@ -76,7 +76,7 @@ COPY --from=staticbuilder --chown=1000 /tmp/build /srv
 | `HTTP_SERVER_ADDRESS` | `:8000` | Valid address | HTTP server listening address |
 | `HTTP_SERVER_ROOT_URL` | `/` | URL path | HTTP server root URL |
 | `HTTP_SERVER_LOG_REQUESTS` | `on` | `on` or `off` | Log requests and responses information |
-| `HTTP_SERVER_SRV_FILEPATH` | `/srv` | Valid file path | File path to your static files directory |
+| `FILEPATH_SRV` | `/srv` | Valid file path | File path to your static files directory |
 | `METRICS_SERVER_ADDRESS` | `:9090` | Valid address | Prometheus HTTP server listening address |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warning`, `error` | Logging level |
 | `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Valid address | Health server listening address |

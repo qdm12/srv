@@ -58,7 +58,7 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/app
 ENV HTTP_SERVER_ADDRESS=:8000 \
     HTTP_SERVER_ROOT_URL=/ \
     HTTP_SERVER_LOG_REQUESTS=on \
-    HTTP_SERVER_SRV_FILEPATH=./srv \
+    FILEPATH_SRV=./srv \
     METRICS_SERVER_ADDRESS=:9090 \
     LOG_LEVEL=info \
     HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \

@@ -7,7 +7,6 @@ import (
 type HTTP struct {
 	Address     string
 	RootURL     string
-	SrvFilepath string
 	LogRequests bool
 }
 
@@ -17,10 +16,6 @@ func (h *HTTP) get(env params.Env) (warning string, err error) {
 		return warning, err
 	}
 	h.RootURL, err = h.getRootURL(env)
-	if err != nil {
-		return warning, err
-	}
-	h.SrvFilepath, err = h.getSrvFilepath(env)
 	if err != nil {
 		return warning, err
 	}
@@ -41,10 +36,6 @@ func (h *HTTP) getAddress(env params.Env) (address, warning string, err error) {
 
 func (h *HTTP) getRootURL(env params.Env) (rootURL string, err error) {
 	return env.RootURL("HTTP_SERVER_ROOT_URL")
-}
-
-func (h *HTTP) getSrvFilepath(env params.Env) (filepath string, err error) {
-	return env.Path("HTTP_SERVER_SRV_FILEPATH", params.Default("./srv"))
 }
 
 func (h *HTTP) getLogRequests(env params.Env) (log bool, err error) {
