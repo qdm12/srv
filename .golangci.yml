@@ -19,6 +19,12 @@ issues:
       text: buildDate is a global variable
       linters:
         - gochecknoglobals
+    - text: "mnd: Magic number: 0700"
+      linters:
+        - gomnd
+    - text: "mnd: Magic number: 0400"
+      linters:
+        - gomnd
 
 linters:
   disable-all: true
