@@ -4,7 +4,7 @@ ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
 
-FROM qmcgaw/xcputranslate:v0.4.0 AS xcputranslate
+FROM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 RUN apk --update add git g++
@@ -42,8 +42,8 @@ ARG TARGETPLATFORM
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
-RUN GOARCH="$(xcputranslate -targetplatform=${TARGETPLATFORM} -field arch)" \
-    GOARM="$(xcputranslate -targetplatform=${TARGETPLATFORM} -field arm)" \
+RUN GOARCH="$(xcputranslate translate -targetplatform=${TARGETPLATFORM} -field arch)" \
+    GOARM="$(xcputranslate translate -targetplatform=${TARGETPLATFORM} -field arm)" \
     go build -trimpath -ldflags="-s -w \
     -X 'main.version=$VERSION' \
     -X 'main.buildDate=$BUILD_DATE' \
@@ -81,4 +81,5 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/srv" \
     org.opencontainers.image.title="srv" \
     org.opencontainers.image.description="srv is a small Go application to use as a container or as a base Docker image in other projects to serve static files over HTTP"
+VOLUME [ "/tmp/srv" ]
 COPY --from=build --chown=1000 /tmp/gobuild/app /app
