@@ -4,12 +4,14 @@ ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
 
+FROM qmcgaw/xcputranslate:v0.4.0 AS xcputranslate
+
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 RUN apk --update add git g++
 ENV CGO_ENABLED=0
 ARG GOLANGCI_LINT_VERSION=v1.41.1
 RUN go get github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
-COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./
 RUN go mod download
@@ -79,5 +81,4 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/srv" \
     org.opencontainers.image.title="srv" \
     org.opencontainers.image.description="srv is a small Go application to use as a container or as a base Docker image in other projects to serve static files over HTTP"
-VOLUME [ "/tmp/srv" ]
 COPY --from=build --chown=1000 /tmp/gobuild/app /app
