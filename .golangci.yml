@@ -48,7 +48,6 @@ linters:
     - goerr113
     - goheader
     - goimports
-    - golint
     - gomnd
     - goprintffuncname
     - gosec
@@ -65,8 +64,8 @@ linters:
     - nolintlint
     # - paralleltest
     - prealloc
+    - revive
     - rowserrcheck
-    - exportloopref
     - sqlclosecheck
     - staticcheck
     - structcheck
