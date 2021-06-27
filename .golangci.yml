@@ -25,6 +25,9 @@ issues:
     - text: "mnd: Magic number: 0400"
       linters:
         - gomnd
+    - text: "mnd: Magic number: 0600"
+      linters:
+        - gomnd
 
 linters:
   disable-all: true

@@ -22,6 +22,6 @@ func CopyDir(sourcePath, destinationPath string) (err error) {
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(targetPath, b, 0400)
+		return os.WriteFile(targetPath, b, 0600)
 	})
 }
