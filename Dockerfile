@@ -4,7 +4,7 @@ ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
 
-FROM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
+FROM --platform=$BUILDPLATFORM qmcgaw/xcputranslate:v0.6.0 AS xcputranslate
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 RUN apk --update add git g++
